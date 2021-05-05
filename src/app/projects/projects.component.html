@@ -1,0 +1,62 @@
+<div id="outer-project-container">
+    <div id="inner-project-container">
+        <div id="table-header">
+            <h1>All Projects</h1>
+            <button (click)="toggleProjectAddForm()" class="button is-info">Add</button>
+        </div>
+        <form *ngIf="isProjectAddFormVisible" #projectForm="ngForm" (ngSubmit)="add(projectForm.value)" id="project-form">
+            <div class="field">
+                <label class="label">Customer Name</label>
+                <div class="control">
+                    <div class="select is-small">
+                      <select name="customerId" ngModel required>
+                        <option>Select Customer</option>
+                        <option *ngFor="let customer of customers" [value]="customer.id">{{ customer.name }}</option>
+                      </select>
+                    </div>
+                  </div>
+                <label class ="label">Project Name</label>
+                <div class="control">
+                    <input type="text" name="name" ngModel>
+                </div>
+            </div>
+            <button *ngIf="!isAdding" class = "button is-primary is-light">submit</button>
+            <button *ngIf="isAdding" class = "button is-primary is-light is-loading"></button>
+            <button class = "button is-danger is-light" (click)=toggleProjectAddForm()>cancel</button>
+            <p *ngIf="addErrorMessage" id="add-error">*{{addErrorMessage}}</p>
+        </form>
+        <div class="content is-large">
+            <ul>
+                <div *ngIf="isLoading" class="box" id="loader-container">
+                    <div class="loader-wrapper">
+                        <div class="loader is-loading"></div>
+                    </div>
+                </div>
+                <li *ngFor="let project of projects"> 
+                    <div id="project-info-container">
+                        <span *ngIf="!project.isBeingEdited">Customer: {{ getCustomerName(project.customerId) }}</span>
+                        <span *ngIf="!project.isBeingEdited">Project name: {{ project.name }}</span>
+                    </div>
+                    <form id="project-edit-form" *ngIf="project.isBeingEdited" #editForm="ngForm" (ngSubmit)="edit(editForm.value, project.id)">
+                        <label class ="label">Customer:</label>
+                        <div class="select is-small">
+                            <select name="customerId" ngModel required>
+                              <option>Select Customer</option>
+                              <option *ngFor="let customer of customers" [value]="customer.id">{{ customer.name }}</option>
+                            </select>
+                          </div>
+                          <label class ="label">New Project Name:</label>
+                        <input class="input" type="text" name="name" [placeholder]="project.name" ngModel>
+                        <button>Submit</button>
+                    </form>
+                    <div>
+                        <button *ngIf="!project.isBeingEdited" class="button is-small" (click)="toggleEditForm(project)">Edit</button>
+                        <button *ngIf="project.isBeingEdited" class="button is-small" (click)="toggleEditForm(project)">Cancel</button>
+                        <button *ngIf="!project.isBeingEdited" class="button is-small" (click)="delete(project.id)">Delete</button>
+                    </div>
+                    <p *ngIf="project.errorMessage" class="content is-small" id="project-error">*{{project.errorMessage}}</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

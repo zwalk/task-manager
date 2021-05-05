@@ -1,0 +1,19 @@
+#login-form-container, #signup-form-container {
+    display: flex;
+    justify-content: flex-end;
+}
+
+#login-form, #signup-form {
+    position: fixed;
+    z-index: 1;
+}
+
+#welcome {
+    font-weight: bold;
+    margin-right: 2%;
+}
+
+#signin-error, #signup-error {
+    color: red;
+    font-size: small;
+}

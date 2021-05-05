@@ -1,1 +1,23 @@
 /* You can add global styles to this file, and also import other style files */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+footer {
+    background-color: lightgray !important;
+    padding: .5rem .2rem 1rem !important;
+    margin-top: 2%;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+#page-container {
+    position: relative;
+    min-height: 100vh;
+  }
+  
+  #content-wrap {
+    padding-bottom: 4rem; 
+  }

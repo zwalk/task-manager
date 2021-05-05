@@ -1,0 +1,43 @@
+<div *ngIf="isLoggedIn" id="outer-customer-container">
+    <div id="inner-customer-container">
+        <div id="table-header">
+            <h1>All Customers</h1>
+            <button (click)="toggleCustomerAddForm()" class="button is-info">Add</button>
+        </div>
+        
+        <form *ngIf="isCustomerAddFormVisible" #customerForm="ngForm" (ngSubmit)="add(customerForm.value)" id="customer-form">
+            <div class="field">
+                <label class ="label">Customer Name</label>
+                <div class="control">
+                    <input type="text" name="name" ngModel>
+                </div>
+                <button *ngIf="!isAdding" class = "button is-primary is-light">submit</button>
+                <button *ngIf="isAdding" class = "button is-primary is-light is-loading"></button>
+                <button class = "button is-danger is-light" (click)=toggleCustomerAddForm()>cancel</button>
+                <p *ngIf="addErrorMessage" id="add-error">*{{addErrorMessage}}</p>
+            </div>
+        </form>
+        <div class="content is-large">
+            <ul>
+                <div *ngIf="isLoading" class="box" id="loader-container">
+                    <div class="loader-wrapper">
+                        <div class="loader is-loading"></div>
+                    </div>
+                </div>
+                <li *ngFor="let customer of customers; index as i"> 
+                    <span *ngIf="!customer.isBeingEdited">{{ customer.name }}</span>
+                    <form *ngIf="customer.isBeingEdited" #editForm="ngForm" (ngSubmit)="edit(editForm.value, customer.id)">
+                        <input type="text" name="name" [placeholder]="customer.name" ngModel>
+                        <button>Submit</button>
+                    </form>
+                    <div>
+                        <button *ngIf="!customer.isBeingEdited" class="button is-small" (click)="toggleEditForm(customer)">Edit</button>
+                        <button *ngIf="customer.isBeingEdited" class="button is-small" (click)="toggleEditForm(customer)">Cancel</button>
+                        <button *ngIf="!customer.isBeingEdited" class="button is-small" (click)="delete(customer.id)">Delete</button>
+                    </div>
+                    <p *ngIf="customer.errorMessage" class="content is-small" id="customer-error">*{{customer.errorMessage}}</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

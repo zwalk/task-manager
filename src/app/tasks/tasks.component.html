@@ -1,0 +1,79 @@
+<div id="outer-task-container">
+    <div id="inner-task-container">
+        <div id="table-header">
+            <h1>All Tasks</h1>
+            <button (click)="toggleTaskAddForm()" class="button is-info">Add</button>
+        </div>
+        <form *ngIf="isTaskAddFormVisible" #projectForm="ngForm" (ngSubmit)="add(projectForm.value)" id="task-form">
+            <div class="field">
+                <label class="label">Project Name</label>
+                <div class="control">
+                    <div class="select is-small">
+                      <select name="projectId" ngModel required>
+                        <option>Select Project</option>
+                        <option *ngFor="let project of projects" [value]="project.id">{{ project.name }} ({{getCustomerNameFromProject(project)}})</option>
+                      </select>
+                    </div>
+                  </div>
+                <label class ="label">Task Description</label>
+                <div class="control">
+                    <input type="text" name="description" ngModel>
+                </div>
+            </div>
+            <button *ngIf="!isAdding" class = "button is-primary is-light">submit</button>
+            <button *ngIf="isAdding" class = "button is-primary is-light is-loading"></button>
+            <button class = "button is-danger is-light" (click)=toggleTaskAddForm()>cancel</button>
+            <p *ngIf="addErrorMessage" id="add-error">*{{addErrorMessage}}</p>
+        </form>
+        <div class="content is-large">
+            <ul>
+                <div *ngIf="isLoading" class="box" id="loader-container">
+                    <div class="loader-wrapper">
+                        <div class="loader is-loading"></div>
+                    </div>
+                </div>
+                <li *ngFor="let task of tasks"> 
+                    <div id="task-info-container">
+                        <span *ngIf="!task.isBeingEdited">Customer: {{ getCustomerName(task.projectId) }}</span>
+                        <span *ngIf="!task.isBeingEdited">Project: {{ getProjectName(task.projectId) }}</span>
+                    </div>
+                    <span id="task-container" *ngIf="!task.isBeingEdited">Task: 
+                        <p>{{ task.description }}</p>
+                    </span>
+                    <div id="hours-container">
+                        <p>Total hours: {{ getTotalHours(task.id) }}</p>
+                        <p>Your hours: {{ getYourHours(task.id) }}</p>
+                    </div>
+                    <form id="task-edit-form" *ngIf="task.isBeingEdited" #editForm="ngForm" (ngSubmit)="edit(editForm.value, task.id)">
+                        <label class ="label">Project:</label>
+                        <div class="select is-small">
+                            <select name="projectId" ngModel required>
+                              <option>Select Project</option>
+                              <option *ngFor="let project of projects" [value]="project.id">{{ project.name }}  ({{getCustomerNameFromProject(project)}})</option>
+                            </select>
+                          </div>
+                          <label class ="label">New Task Description:</label>
+                        <input class="input" type="text" name="description" [placeholder]="task.description" ngModel>
+                        <button>Submit</button>
+                    </form>
+                    <div>
+                        <button *ngIf="!task.isBeingEdited && !task.isTimeBeingLogged" class="button is-small" (click)="toggleEditForm(task)">Edit</button>
+                        <button *ngIf="task.isBeingEdited" class="button is-small" (click)="toggleEditForm(task)">Cancel</button>
+                        <button *ngIf="!task.isBeingEdited && !task.isTimeBeingLogged" class="button is-small" (click)="delete(task)">Delete</button>
+                        <button *ngIf="!task.isBeingEdited && !task.isTimeBeingLogged" class="button is-small" (click)="toggleHoursForm(task)">Log Hours</button>
+                        <form id="task-log-form" *ngIf="task.isTimeBeingLogged" #timeLogForm="ngForm" (ngSubmit)="logTime(timeLogForm.value, task)">
+                            <div id="time-input-and-label-container">
+                                <label class="label">Time in Hours:</label>
+                                <input class="input" id="hours-input" type="text" name="hours" [placeholder]="7" ngModel>
+                            </div>
+                            <button>submit</button>
+                            <button (click)="toggleHoursForm(task)">cancel</button>
+                        </form>
+                        <p *ngIf="task.taskLogError" class="content is-small" id="task-error">*{{task.taskLogError}}</p>
+                    </div>
+                    <p *ngIf="task.errorMessage" class="content is-small" id="task-error">*{{task.errorMessage}}</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,66 @@
+li {
+    list-style: none;
+    border-bottom: dashed;
+    background-color: powderblue;
+}
+
+li:last-child {
+    border-bottom: none;
+}
+
+#outer-project-container {
+    display: flex;
+    justify-content: center;
+}
+
+#inner-project-container {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    flex-basis: 100%;
+}
+
+h1, li {
+    text-align: center;
+}
+
+ul, li {
+    margin: 0 auto;
+}
+
+#project-form {
+    text-align: center;
+}
+
+#table-header {
+    display: flex;
+    justify-content: center;
+    border-bottom: solid;
+    padding: 1%;
+}
+
+#table-header button {
+    margin-left: 1%;
+    padding-top: 0;
+    padding-bottom: 0;
+    height: auto;
+}
+
+#loader-container {
+    display: flex;
+    justify-content: center;
+}
+
+#project-error {
+    color: red;
+}
+
+#project-edit-form {
+    width: 30%;
+    margin: 0 auto;
+}
+
+#project-info-container {
+    display: flex;
+    justify-content: space-evenly;
+}
