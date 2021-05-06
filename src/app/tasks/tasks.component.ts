@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Customer } from '../models/Customer';
 import { Project } from '../models/Project';
 import { Task } from '../models/Task';
-import { TaskLog } from '../models/taskLog';
+import { TaskLog } from '../models/TaskLog';
 import { AuthService } from '../services/auth.service';
 import { CustomerService } from '../services/customer.service';
 import { ProjectService } from '../services/project.service';
@@ -25,16 +25,13 @@ export class TasksComponent implements OnInit {
   isTaskAddFormVisible : boolean = false
   addErrorMessage : string | undefined = undefined;
   logTimeErrorMessage : string | undefined = undefined;
+  isStartTimeLoading : boolean = false;
 
   constructor(private authService : AuthService, private taskService : TaskService, private projectService : ProjectService, 
     private customerService : CustomerService, private taskLogService : TaskLogService) { }
 
   ngOnInit(): void {
     if (this.authService.isLoggedIn) {
-      this.taskService.getAll().subscribe({
-        next: (res) => {this.tasks = res},
-        error: () => {this.refreshApp()}
-      })
       this.customerService.getAll().subscribe({
         next: (res) => {this.customers = res},
         error: () => {this.refreshApp()}
@@ -44,9 +41,26 @@ export class TasksComponent implements OnInit {
         error: () => {this.refreshApp()}
       })
       this.taskLogService.getAll().subscribe({
-        next: (res) => {this.taskLogs = res},
+        next: (res) => {
+          this.taskLogs = res
+          this.taskService.getAll().subscribe({
+            next: (res) => {
+              this.tasks = res;
+              this.tasks.forEach(task => { 
+                if(this.taskLogs.filter(taskLog => taskLog.taskId === task.id && taskLog.endTime == null) 
+                .find(taskLog => taskLog.userId == this.authService.currentUser?.id)) {
+                  task.isTimeBeingLogged = true;
+                } else {
+                  task.isTimeBeingLogged = false;
+                }
+               })
+            },
+            error: () => {this.refreshApp()}
+          })
+        },
         error: () => {this.refreshApp()}
       })
+
     } else {
       this.refreshApp()
     }
@@ -58,7 +72,7 @@ export class TasksComponent implements OnInit {
     if (taskId != undefined) {
       const matchingTaskLogs = this.taskLogs.filter((taskLog) => {
         return taskLog.taskId == taskId && taskLog.userId == this.authService.currentUser?.id
-      }).map(taskLog => taskLog.durationInMinutes)
+      }).map(taskLog => taskLog.durationInSeconds)
       if (matchingTaskLogs.length != 0) {
         const totalMinutes = (matchingTaskLogs.reduce((sum, duration) => {
           if (sum && duration) {
@@ -68,11 +82,14 @@ export class TasksComponent implements OnInit {
           }
         }));
         if (totalMinutes != undefined) {
-          response = totalMinutes / 60;
+          response = totalMinutes / 3600;
         }
       } else {
         response = 0;
       }
+      }
+      if (response) {
+        response = +response.toFixed(2);
       }
 
     return response;
@@ -81,7 +98,7 @@ export class TasksComponent implements OnInit {
   getTotalHours(taskId : number | undefined) : number | undefined {
     let response : number | undefined = undefined;
     if (taskId != undefined) {
-      const matchingTaskLogs = this.taskLogs.filter((taskLog) => taskLog.taskId === taskId).map(taskLog => taskLog.durationInMinutes)
+      const matchingTaskLogs = this.taskLogs.filter((taskLog) => taskLog.taskId === taskId).map(taskLog => taskLog.durationInSeconds);
       if (matchingTaskLogs.length != 0) {
         const totalMinutes = (matchingTaskLogs.reduce((sum, duration) => {
           if (sum && duration) {
@@ -91,11 +108,15 @@ export class TasksComponent implements OnInit {
           }
         }));
         if (totalMinutes != undefined) {
-          response = totalMinutes / 60;
+          response = totalMinutes / 3600;
         }
       } else {
         response = 0;
       }
+      }
+
+      if (response) {
+        response = +response.toFixed(2);
       }
 
     return response;
@@ -132,6 +153,12 @@ export class TasksComponent implements OnInit {
         this.isAdding = false;
         this.toggleTaskAddForm();
         this.taskService.getAll().subscribe((res) => this.tasks = res);
+        this.tasks.forEach(task => { 
+          if(this.taskLogs.filter(taskLog => taskLog.taskId === task.id && taskLog.endTime == undefined) 
+          .find(taskLog => taskLog.userId == this.authService.currentUser?.id)) {
+            task.isTimeBeingLogged = true;
+          }
+         })
       },
       error: (res) => {
         this.isAdding = false;
@@ -194,9 +221,8 @@ export class TasksComponent implements OnInit {
 
   logTime(data : any, task : Task) {
     this.isLoading = true;
-    console.log(task.id);
     if (task.id) {
-      this.taskLogService.add(task.id, data.hours*60).subscribe({
+      this.taskLogService.add(task.id).subscribe({
         next: () => {
           this.isLoading = false;
           task.isTimeBeingLogged = false;
@@ -220,4 +246,100 @@ export class TasksComponent implements OnInit {
     task.taskLogError = undefined;
     task.errorMessage = undefined;
   }
+
+  startTimer(task : Task) {
+    task.isTimeBeingLogged = !task.isTimeBeingLogged;
+    this.isStartTimeLoading = true;
+    if (task.id) {
+      this.taskLogService.add(task.id).subscribe({
+        next: () => {
+          this.isStartTimeLoading = false;
+          this.taskLogService.getAll().subscribe((res) => this.taskLogs = res);
+          this.taskService.getAll().subscribe({
+            next: (res) => {
+              this.tasks = res;
+              this.tasks.forEach(task => { 
+                if(this.taskLogs.filter(taskLog => taskLog.taskId === task.id && taskLog.endTime == null) 
+                .find(taskLog => taskLog.userId == this.authService.currentUser?.id)) {
+                  task.isTimeBeingLogged = true;
+                } else {
+                  task.isTimeBeingLogged = false;
+                }
+               })
+            }
+
+          });
+
+        },
+        error: (res) => {
+          this.isStartTimeLoading = true;
+          if (res.error.message.includes('Validation')) {
+            task.taskLogError = res.error.errors[0].defaultMessage;
+          } else {
+            task.taskLogError = res.error.message;
+          }
+        }
+
+      })
+    } else {
+      this.isStartTimeLoading = false;
+    }
+  }
+
+  endTimer(task : Task) {
+    this.isStartTimeLoading = true;
+    this.taskLogService.getAll().subscribe({
+      next: (res) => {
+        this.taskLogs = res
+      },
+      error: () => {this.refreshApp()}
+    })
+
+    const taskLog : TaskLog | undefined = this.taskLogs.find(taskLog => taskLog.userId === this.authService.currentUser?.id 
+      && taskLog.endTime == null)
+      if (taskLog?.id && task.id) {
+        this.taskLogService.endTimer(taskLog.id, task.id).subscribe({
+          next: () => {
+            this.taskLogService.getAll().subscribe((res) => this.taskLogs = res)
+            this.taskService.getAll().subscribe((res) => {
+              this.tasks = res
+              this.tasks.forEach(task => { 
+                if(this.taskLogs.filter(taskLog => taskLog.taskId === task.id && taskLog.endTime == null) 
+                .find(taskLog => taskLog.userId == this.authService.currentUser?.id)) {
+                  task.isTimeBeingLogged = true;
+                } else {
+                  task.isTimeBeingLogged = false;
+                }
+               })
+               this.isStartTimeLoading = false;
+            });
+          }
+        })
+      } else {
+        this.isStartTimeLoading = false;
+        this.taskLogService.getAll().subscribe({
+          next: (res) => {
+            this.taskLogs = res
+            this.taskService.getAll().subscribe({
+              next: (res) => {
+                this.tasks = res;
+                this.tasks.forEach(task => { 
+                  if(this.taskLogs.filter(taskLog => taskLog.taskId === task.id && taskLog.endTime == null) 
+                  .find(taskLog => taskLog.userId == this.authService.currentUser?.id)) {
+                    task.isTimeBeingLogged = true;
+                  } else {
+                    task.isTimeBeingLogged = false;
+                  }
+                 })
+              },
+              error: () => {this.refreshApp()}
+            })
+          },
+          error: () => {this.refreshApp()}
+        })
+      }
+    
+  }
+
+
 }

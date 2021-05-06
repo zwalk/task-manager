@@ -4,6 +4,6 @@ export class Task {
     projectId : number | undefined;
     isBeingEdited : boolean = false;
     errorMessage : string | undefined = undefined;
-    isTimeBeingLogged : boolean = false;
+    isTimeBeingLogged : boolean | undefined;
     taskLogError : string | undefined = undefined;
 }

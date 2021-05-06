@@ -57,18 +57,12 @@
                         <button>Submit</button>
                     </form>
                     <div>
-                        <button *ngIf="!task.isBeingEdited && !task.isTimeBeingLogged" class="button is-small" (click)="toggleEditForm(task)">Edit</button>
+                        <button *ngIf="!task.isBeingEdited" class="button is-small" (click)="toggleEditForm(task)">Edit</button>
                         <button *ngIf="task.isBeingEdited" class="button is-small" (click)="toggleEditForm(task)">Cancel</button>
-                        <button *ngIf="!task.isBeingEdited && !task.isTimeBeingLogged" class="button is-small" (click)="delete(task)">Delete</button>
-                        <button *ngIf="!task.isBeingEdited && !task.isTimeBeingLogged" class="button is-small" (click)="toggleHoursForm(task)">Log Hours</button>
-                        <form id="task-log-form" *ngIf="task.isTimeBeingLogged" #timeLogForm="ngForm" (ngSubmit)="logTime(timeLogForm.value, task)">
-                            <div id="time-input-and-label-container">
-                                <label class="label">Time in Hours:</label>
-                                <input class="input" id="hours-input" type="text" name="hours" [placeholder]="7" ngModel>
-                            </div>
-                            <button>submit</button>
-                            <button (click)="toggleHoursForm(task)">cancel</button>
-                        </form>
+                        <button *ngIf="!task.isBeingEdited" class="button is-small" (click)="delete(task)">Delete</button>
+                        <button *ngIf="!task.isBeingEdited && !task.isTimeBeingLogged" class="button is-small" (click)="startTimer(task)">Start Timer</button>
+                        <button *ngIf="!task.isBeingEdited && task.isTimeBeingLogged" class="button is-small" (click)="endTimer(task)">End Timer</button>
+                        <button *ngIf="isStartTimeLoading" class="button is-primary is-loading"></button>
                         <p *ngIf="task.taskLogError" class="content is-small" id="task-error">*{{task.taskLogError}}</p>
                     </div>
                     <p *ngIf="task.errorMessage" class="content is-small" id="task-error">*{{task.errorMessage}}</p>
