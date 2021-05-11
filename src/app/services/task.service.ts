@@ -10,23 +10,31 @@ import { AuthService } from './auth.service';
 export class TaskService {
   
   endpoint: string = 'http://localhost:8080';
-  headers = new HttpHeaders().set('Content-Type', 'application/json').set('Authorization', "Bearer " + this.authService.token);
+  headers = new HttpHeaders();
   
   constructor(private http: HttpClient, private authService : AuthService) {   }
 
   public getAll() : Observable<Task[]> {
+    this.setHeaders();
     return this.http.get<Task[]>(`${this.endpoint}/tasks`, {headers: this.headers});
   }
 
   public add(description: string, projectId : number) : Observable<void> {
+    this.setHeaders();
     return this.http.post<void>(`${this.endpoint}/tasks`, {description: description, projectId: projectId}, {headers: this.headers});
   }
 
   public edit(id : number, description: string, projectId : number) : Observable<void> {
+    this.setHeaders();
     return this.http.put<void>(`${this.endpoint}/tasks/${id}`, {description: description, projectId: projectId}, {headers: this.headers})
   }
 
   public delete(id: number) : Observable<void> {
+    this.setHeaders();
     return this.http.delete<void>(`${this.endpoint}/tasks/${id}`, {headers: this.headers});
+  }
+
+  private setHeaders() {
+    this.headers = new HttpHeaders().set('Content-Type', 'application/json').set('Authorization', "Bearer " + this.authService.token);
   }
 }

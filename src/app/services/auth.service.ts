@@ -24,7 +24,7 @@ export class AuthService {
   signIn(username : string, password : string) : Observable<void> {
     return this.http.post<any>(`${this.endpoint}/authenticate`, {username: username, password: password})
       .pipe(
-        tap((res: any) => {
+        map((res: any) => {
           this.token = res.token
           this.currentUser = res;
           this.isLoggedIn = true;

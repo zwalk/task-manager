@@ -90,4 +90,10 @@ ul, li {
         width: 10%;
     }
 
+    #task-description-ta {
+        width: 50%;
+        margin: 0 auto;
+        min-width: 0;
+    }
+
 }

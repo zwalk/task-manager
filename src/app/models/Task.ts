@@ -6,4 +6,6 @@ export class Task {
     errorMessage : string | undefined = undefined;
     isTimeBeingLogged : boolean | undefined;
     taskLogError : string | undefined = undefined;
+    isStartTimeLoading = false;
+    time : string | undefined = undefined;
 }

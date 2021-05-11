@@ -7,17 +7,15 @@
         <form *ngIf="isTaskAddFormVisible" #projectForm="ngForm" (ngSubmit)="add(projectForm.value)" id="task-form">
             <div class="field">
                 <label class="label">Project Name</label>
-                <div class="control">
                     <div class="select is-small">
                       <select name="projectId" ngModel required>
-                        <option>Select Project</option>
+                        <option [selected]="true" [value]="null" disabled>Select Project</option>
                         <option *ngFor="let project of projects" [value]="project.id">{{ project.name }} ({{getCustomerNameFromProject(project)}})</option>
                       </select>
                     </div>
-                  </div>
                 <label class ="label">Task Description</label>
                 <div class="control">
-                    <input type="text" name="description" ngModel>
+                    <textarea class="textarea" id="task-description-ta" placeholder="Write some code..." name="description" ngModel></textarea>
                 </div>
             </div>
             <button *ngIf="!isAdding" class = "button is-primary is-light">submit</button>
@@ -56,13 +54,14 @@
                         <input class="input" type="text" name="description" [placeholder]="task.description" ngModel>
                         <button>Submit</button>
                     </form>
+                    <p *ngIf="task.isTimeBeingLogged" class="content is-medium">{{ task.time }}</p>
                     <div>
                         <button *ngIf="!task.isBeingEdited" class="button is-small" (click)="toggleEditForm(task)">Edit</button>
                         <button *ngIf="task.isBeingEdited" class="button is-small" (click)="toggleEditForm(task)">Cancel</button>
                         <button *ngIf="!task.isBeingEdited" class="button is-small" (click)="delete(task)">Delete</button>
-                        <button *ngIf="!task.isBeingEdited && !task.isTimeBeingLogged" class="button is-small" (click)="startTimer(task)">Start Timer</button>
-                        <button *ngIf="!task.isBeingEdited && task.isTimeBeingLogged" class="button is-small" (click)="endTimer(task)">End Timer</button>
-                        <button *ngIf="isStartTimeLoading" class="button is-primary is-loading"></button>
+                        <button *ngIf="!task.isBeingEdited && !task.isTimeBeingLogged" class="button is-small is-primary" (click)="startTimer(task)">Start Timer</button>
+                        <button *ngIf="!task.isBeingEdited && task.isTimeBeingLogged" class="button is-small is-danger" (click)="endTimer(task)">End Timer</button>
+                        <button *ngIf="task.isStartTimeLoading" class="button is-primary is-loading"></button>
                         <p *ngIf="task.taskLogError" class="content is-small" id="task-error">*{{task.taskLogError}}</p>
                     </div>
                     <p *ngIf="task.errorMessage" class="content is-small" id="task-error">*{{task.errorMessage}}</p>

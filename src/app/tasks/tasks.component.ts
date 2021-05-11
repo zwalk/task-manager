@@ -50,8 +50,10 @@ export class TasksComponent implements OnInit {
                 if(this.taskLogs.filter(taskLog => taskLog.taskId === task.id && taskLog.endTime == null) 
                 .find(taskLog => taskLog.userId == this.authService.currentUser?.id)) {
                   task.isTimeBeingLogged = true;
+                  this.setTime(task);
                 } else {
                   task.isTimeBeingLogged = false;
+                  task.time = undefined;
                 }
                })
             },
@@ -62,7 +64,7 @@ export class TasksComponent implements OnInit {
       })
 
     } else {
-      this.refreshApp()
+      this.refreshApp();
     }
 
   }
@@ -249,27 +251,34 @@ export class TasksComponent implements OnInit {
 
   startTimer(task : Task) {
     task.isTimeBeingLogged = !task.isTimeBeingLogged;
-    this.isStartTimeLoading = true;
+    task.isStartTimeLoading = true;
     if (task.id) {
       this.taskLogService.add(task.id).subscribe({
         next: () => {
-          this.isStartTimeLoading = false;
-          this.taskLogService.getAll().subscribe((res) => this.taskLogs = res);
-          this.taskService.getAll().subscribe({
+          task.isStartTimeLoading = false;
+          this.taskLogService.getAll().subscribe({
             next: (res) => {
-              this.tasks = res;
-              this.tasks.forEach(task => { 
-                if(this.taskLogs.filter(taskLog => taskLog.taskId === task.id && taskLog.endTime == null) 
-                .find(taskLog => taskLog.userId == this.authService.currentUser?.id)) {
-                  task.isTimeBeingLogged = true;
-                } else {
-                  task.isTimeBeingLogged = false;
+              this.taskLogs = res;
+              this.taskService.getAll().subscribe({
+                next: (res) => {
+                  this.tasks = res;
+                  this.tasks.forEach(task => { 
+                    if(this.taskLogs.filter(taskLog => taskLog.taskId === task.id && taskLog.endTime == null) 
+                    .find(taskLog => taskLog.userId == this.authService.currentUser?.id)) {
+                      task.isTimeBeingLogged = true;
+                      this.setTime(task);
+                    } else {
+                      task.isTimeBeingLogged = false;
+                      task.time = undefined;
+                    }
+                   })
+                },
+                error: () => {
+                  this.refreshApp();
                 }
-               })
+              });
             }
-
-          });
-
+          })
         },
         error: (res) => {
           this.isStartTimeLoading = true;
@@ -290,55 +299,80 @@ export class TasksComponent implements OnInit {
     this.isStartTimeLoading = true;
     this.taskLogService.getAll().subscribe({
       next: (res) => {
-        this.taskLogs = res
-      },
-      error: () => {this.refreshApp()}
-    })
-
-    const taskLog : TaskLog | undefined = this.taskLogs.find(taskLog => taskLog.userId === this.authService.currentUser?.id 
-      && taskLog.endTime == null)
-      if (taskLog?.id && task.id) {
-        this.taskLogService.endTimer(taskLog.id, task.id).subscribe({
-          next: () => {
-            this.taskLogService.getAll().subscribe((res) => this.taskLogs = res)
-            this.taskService.getAll().subscribe((res) => {
-              this.tasks = res
-              this.tasks.forEach(task => { 
-                if(this.taskLogs.filter(taskLog => taskLog.taskId === task.id && taskLog.endTime == null) 
-                .find(taskLog => taskLog.userId == this.authService.currentUser?.id)) {
-                  task.isTimeBeingLogged = true;
-                } else {
-                  task.isTimeBeingLogged = false;
-                }
-               })
-               this.isStartTimeLoading = false;
-            });
-          }
-        })
-      } else {
-        this.isStartTimeLoading = false;
-        this.taskLogService.getAll().subscribe({
-          next: (res) => {
-            this.taskLogs = res
-            this.taskService.getAll().subscribe({
+        this.taskLogs = res;
+        const taskLog : TaskLog | undefined = this.taskLogs.find(taskLog => taskLog.userId === this.authService.currentUser?.id 
+          && taskLog.endTime == null)
+          if (taskLog?.id && task.id) {
+            this.taskLogService.endTimer(taskLog.id, task.id).subscribe({
+              next: () => {
+                this.taskLogService.getAll().subscribe((res) => this.taskLogs = res)
+                this.taskService.getAll().subscribe((res) => {
+                  this.tasks = res
+                  this.tasks.forEach(task => { 
+                    if(this.taskLogs.filter(taskLog => taskLog.taskId === task.id && taskLog.endTime == null) 
+                    .find(taskLog => taskLog.userId == this.authService.currentUser?.id)) {
+                      task.isTimeBeingLogged = true;
+                      this.setTime(task);
+                    } else {
+                      task.isTimeBeingLogged = false;
+                      task.time = undefined;
+                    }
+                   })
+                   this.isStartTimeLoading = false;
+                });
+              }
+            })
+          } else {
+            this.isStartTimeLoading = false;
+            this.taskLogService.getAll().subscribe({
               next: (res) => {
-                this.tasks = res;
-                this.tasks.forEach(task => { 
-                  if(this.taskLogs.filter(taskLog => taskLog.taskId === task.id && taskLog.endTime == null) 
-                  .find(taskLog => taskLog.userId == this.authService.currentUser?.id)) {
-                    task.isTimeBeingLogged = true;
-                  } else {
-                    task.isTimeBeingLogged = false;
-                  }
-                 })
+                this.taskLogs = res
+                this.taskService.getAll().subscribe({
+                  next: (res) => {
+                    this.tasks = res;
+                    this.tasks.forEach(task => { 
+                      if(this.taskLogs.filter(taskLog => taskLog.taskId === task.id && taskLog.endTime == null) 
+                      .find(taskLog => taskLog.userId == this.authService.currentUser?.id)) {
+                        task.isTimeBeingLogged = true;
+                      } else {
+                        task.isTimeBeingLogged = false;
+                      }
+                     })
+                  },
+                  error: () => {this.refreshApp()}
+                })
               },
               error: () => {this.refreshApp()}
             })
-          },
-          error: () => {this.refreshApp()}
-        })
-      }
+          }
+      },
+      error: () => {this.refreshApp()}
+    })
     
+  }
+
+  setTime(task : Task) {
+    setInterval(() => {
+    const taskLog : TaskLog | undefined = this.taskLogs.filter(taskLog => taskLog.taskId === task.id && taskLog.endTime == null) 
+                      .find(taskLog => taskLog.userId == this.authService.currentUser?.id);
+    let duration : number = 0;
+    if (taskLog?.startTime) {
+      duration = new Date().getTime() - new Date(taskLog.startTime).getTime();
+    }
+    var days = Math.floor(duration / (1000 * 60 * 60 * 24));
+    var hours = Math.floor((duration % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    var minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+    var seconds = Math.floor((duration % (1000 * 60)) / 1000);
+    
+    task.time = days + "d " + hours + "h "
+    + minutes + "m " + seconds + "s ";  
+    }, 1000);
+  }
+
+  getStartTime(task : Task) : Date | undefined{
+    const taskLog : TaskLog | undefined = this.taskLogs.filter(taskLog => taskLog.taskId === task.id && taskLog.endTime == null) 
+                      .find(taskLog => taskLog.userId == this.authService.currentUser?.id);
+    return taskLog?.startTime;
   }
 
 

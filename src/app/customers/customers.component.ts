@@ -93,7 +93,6 @@ export class CustomersComponent implements OnInit {
           this.customerService.getAll().subscribe((res) => this.customers = res);
         },
         error: (res) => {
-          console.log(res);
           this.isLoading = false;
           const selectedCustomer : Customer | undefined = this.customers?.find( customer => customer.id === id);
           if (selectedCustomer != undefined) {
